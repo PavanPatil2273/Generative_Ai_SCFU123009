@@ -1,0 +1,31 @@
+  
+Model: Phi-3.5-mini-instruct
+   Creator: Microsoft
+   Parameters: 3.8B
+   Generative Model: Yes
+   Context Length: 128K tokens
+   Local Execution: Yes, suitable for compute/memory-constrained       environments
+   Recommended/Tested Hardware: NVIDIA A100, A6000, H100; V100 or older can use eager attention.
+
+
+2) Model: Qwen2.5-14B-Instruct
+   Creator: Qwen / Alibaba Cloud
+   Parameters: 14.7B
+   Generative Model: Yes
+   Context Length: 131,072 tokens (128K)
+   Local Execution: Yes, with suitable hardware; quantized versions are more suitable
+   Hardware: GPU recommended; the model supports local deployment   using Transformers, vLLM and SGLang.
+
+
+3) Model: Mixtral-8x22B-Instruct-v0.1
+   Creator: Mistral AI
+   Parameters: 141B total / ~39B active
+   Generative Model: Yes
+   Context Length: 64K tokens
+   Local Execution: Possible, but requires powerful hardware
+   Architecture: Mixture-of-Experts (MoE)
+   Hidden Size: 6,144
+
+
+
+
