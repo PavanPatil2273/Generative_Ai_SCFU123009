@@ -1,74 +1,57 @@
 from dotenv import load_dotenv
-from langchain_core.output_parsers import PydanticOutputParser, StrOutputParser
-from langchain_core.prompts import ChatPromptTemplate, PromptTemplate
 from langchain_groq import ChatGroq
-from pydantic import BaseModel, Field
+from langchain_core.prompts import PromptTemplate
+from langchain_core.output_parsers import StrOutputParser
 
 load_dotenv()
 
 model = ChatGroq(
     model="openai/gpt-oss-20b",
-    temperature=0,
+    temperature=0
 )
 
-
-class ResearchExtraction(BaseModel):
-    research_question: str = Field(description="The main question investigated")
-    method: str = Field(description="The research method used")
-    key_finding: str = Field(description="The most important result")
+abstract = input("Enter paper abstract: ")
 
 
-step1_parser = PydanticOutputParser(pydantic_object=ResearchExtraction)
+prompt1 = PromptTemplate.from_template(
+    """
+    Read the following research paper abstract.
 
-step1_prompt = PromptTemplate(
-    template="""
-Extract the research question, method, and key finding from this paper abstract.
+    Find:
+    1. Research question
+    2. Research method
+    3. Key finding
 
-Abstract:
-{abstract_text}
+    Give the answer clearly.
 
-{format_instructions}
-""",
-    input_variables=["abstract_text"],
-    partial_variables={
-        "format_instructions": step1_parser.get_format_instructions()
-    },
+    Abstract:
+    {abstract}
+    """
 )
 
-step2_prompt = ChatPromptTemplate.from_messages([
-    (
-        "system",
-        "You are a science communicator explaining research to a general audience.",
-    ),
-    (
-        "human",
-        "Write a clear, accurate plain-language summary using only the structured "
-        "research information below. Do not assume details that are not provided.\n\n"
-        "Research question: {research_question}\n"
-        "Method: {method}\n"
-        "Key finding: {key_finding}",
-    ),
-])
+chain1 = prompt1 | model | StrOutputParser()
 
-step1_chain = step1_prompt | model | step1_parser
-step2_chain = step2_prompt | model | StrOutputParser()
+result1 = chain1.invoke({
+    "abstract": abstract
+})
 
+print(result1)
 
-def abstract_to_layperson_summary(abstract_text: str) -> dict:
-    """Extract an abstract's main points and explain them for non-experts."""
-    structured_extraction = step1_chain.invoke({"abstract_text": abstract_text})
-    layperson_summary = step2_chain.invoke(structured_extraction.model_dump())
-    return {
-        "structured_extraction": structured_extraction,
-        "layperson_summary": layperson_summary,
-    }
+prompt2 = PromptTemplate.from_template(
+    """
+    Explain the following research information
+    in simple language that a normal person can understand.
 
+    Research information:
+    {research}
 
-if __name__ == "__main__":
-    abstract_text = input("Enter paper abstract: ")
-    result = abstract_to_layperson_summary(abstract_text)
+    Do not add information that is not given.
+    """
+)
 
-    print("\nStep 1 - Structured extraction:")
-    print(result["structured_extraction"].model_dump_json(indent=2))
-    print("\nStep 2 - Layperson summary:")
-    print(result["layperson_summary"])
+chain2 = prompt2 | model | StrOutputParser()
+
+result2 = chain2.invoke({
+    "research": result1
+})
+print(result2)
